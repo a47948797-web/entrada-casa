@@ -2,33 +2,29 @@
 <html lang="pt">
 <head>
 <meta charset="UTF-8">
-<title>Entradas Modernas</title>
+<title>Mãe - Entradas</title>
 <style>
-  body{
-    margin:0; padding:20px; font-family:'Helvetica',sans-serif;
-    background: linear-gradient(270deg,#81c784,#4caf50,#66bb6a);
-    background-size:600% 600%;
-    animation: gradientBG 15s ease infinite;
-    overflow:hidden;
-  }
-  @keyframes gradientBG{
-    0%{background-position:0% 50%;}
-    50%{background-position:100% 50%;}
-    100%{background-position:0% 50%;}
-  }
-
-  h1{text-align:center;color:white;font-size:2.2em;text-shadow:0 2px 6px rgba(0,0,0,0.3);}
-  ul{list-style:none;padding:0; max-width:400px; margin:20px auto;}
-  li{
-    background:#ffffffaa; color:#4caf50; margin:8px 0; padding:15px;
-    border-radius:15px; box-shadow:0 6px 12px rgba(0,0,0,0.15);
-    transition:0.3s;
-  }
-  li:hover{transform:scale(1.05);}
-  .particle{
-    position:absolute; border-radius:50%; background:white; opacity:0.15;
-    pointer-events:none;
-  }
+body{
+  margin:0; padding:20px; font-family:'Helvetica',sans-serif;
+  background: linear-gradient(270deg,#81c784,#4caf50,#66bb6a);
+  background-size:600% 600%;
+  animation: gradientBG 15s ease infinite;
+  overflow:hidden;
+}
+@keyframes gradientBG{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+h1{text-align:center;color:white;font-size:2.2em;text-shadow:0 2px 6px rgba(0,0,0,0.3);}
+ul{list-style:none;padding:0; max-width:400px; margin:20px auto;}
+li{
+  background:#ffffffaa; color:#4caf50; margin:8px 0; padding:15px;
+  border-radius:15px; box-shadow:0 6px 12px rgba(0,0,0,0.15);
+  transition:0.3s;
+}
+li:hover{transform:scale(1.05);}
+.particle{position:absolute; border-radius:50%; background:white; opacity:0.15; pointer-events:none;}
 </style>
 </head>
 <body>
@@ -39,53 +35,50 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyAZ328N4FCL_rbJmnxYKXsySHwEyeN1OIU",
-    authDomain: "entrada-top.firebaseapp.com",
-    databaseURL: "https://entrada-top-default-rtdb.firebaseio.com",
-    projectId: "entrada-top",
-    storageBucket: "entrada-top.firebasestorage.app",
-    messagingSenderId: "1047123646784",
-    appId: "1:1047123646784:web:bbd2a1006b8e186a0d02a5",
-    measurementId: "G-02DT8KGKTW"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-  const lista=document.getElementById('lista');
+const firebaseConfig = {
+  apiKey: "AIzaSyAZ328N4FCL_rbJmnxYKXsySHwEyeN1OIU",
+  authDomain: "entrada-top.firebaseapp.com",
+  databaseURL: "https://entrada-top-default-rtdb.firebaseio.com",
+  projectId: "entrada-top",
+  storageBucket: "entrada-top.firebasestorage.app",
+  messagingSenderId: "1047123646784",
+  appId: "1:1047123646784:web:bbd2a1006b8e186a0d02a5",
+  measurementId: "G-02DT8KGKTW"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const lista=document.getElementById('lista');
 
-  db.ref("entradas").on("child_added",snapshot=>{
-    const entry=snapshot.val();
-    const li=document.createElement('li');
-    li.textContent=`${entry.nome} — ${entry.data}`;
-    lista.prepend(li);
+db.ref("entradas").on("child_added", snapshot=>{
+  const entry=snapshot.val();
+  const li=document.createElement('li');
+  li.textContent=`${entry.nome} — ${entry.data}`;
+  lista.prepend(li);
+});
+
+// partículas animadas
+const particles=[];
+for(let i=0;i<20;i++){
+  const p=document.createElement('div');
+  p.className='particle';
+  p.style.width=p.style.height=10+Math.random()*40+'px';
+  p.style.left=Math.random()*window.innerWidth+'px';
+  p.style.top=Math.random()*window.innerHeight+'px';
+  document.body.appendChild(p);
+  particles.push(p);
+}
+function moveParticles(x,y){
+  particles.forEach((p,idx)=>{
+    const dx=(x-window.innerWidth/2)*0.02*(idx+1);
+    const dy=(y-window.innerHeight/2)*0.02*(idx+1);
+    p.style.transform=`translate(${dx}px,${dy}px)`;
   });
-
-  // partículas
-  const particles=[];
-  const numParticles=20;
-  for(let i=0;i<numParticles;i++){
-    const p=document.createElement('div');
-    p.className='particle';
-    p.style.width=p.style.height=10+Math.random()*40+'px';
-    p.style.left=Math.random()*window.innerWidth+'px';
-    p.style.top=Math.random()*window.innerHeight+'px';
-    document.body.appendChild(p);
-    particles.push(p);
-  }
-
-  function moveParticles(x,y){
-    particles.forEach((p,idx)=>{
-      const dx=(x-window.innerWidth/2)*0.02*(idx+1);
-      const dy=(y-window.innerHeight/2)*0.02*(idx+1);
-      p.style.transform=`translate(${dx}px,${dy}px)`;
-    });
-  }
-
-  window.addEventListener('mousemove',e=>moveParticles(e.clientX,e.clientY));
-  window.addEventListener('touchmove',e=>{
-    const t=e.touches[0];
-    moveParticles(t.clientX,t.clientY);
-  },{passive:true});
+}
+window.addEventListener('mousemove', e=>moveParticles(e.clientX,e.clientY));
+window.addEventListener('touchmove', e=>{
+  const t=e.touches[0];
+  moveParticles(t.clientX,t.clientY);
+},{passive:true});
 </script>
 </body>
 </html>
