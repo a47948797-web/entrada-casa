@@ -6,7 +6,7 @@
 <style>
 body{
   margin:0; padding:20px; font-family:'Helvetica',sans-serif;
-  background: linear-gradient(270deg,#81c784,#4caf50,#66bb6a);
+  background: linear-gradient(270deg,#9c27b0,#e91e63,#f48fb1);
   background-size:600% 600%;
   animation: gradientBG 15s ease infinite;
   overflow-x:hidden;
@@ -17,21 +17,10 @@ body{
   100%{background-position:0% 50%;}
 }
 h1{text-align:center;color:white;font-size:2.2em;text-shadow:0 2px 6px rgba(0,0,0,0.3); margin-bottom:30px;}
-.day-section{
-  margin:20px auto; max-width:400px; border-radius:15px; padding:10px;
-  background:rgba(255,255,255,0.1);
-}
-.day-title{
-  color:white; font-weight:bold; font-size:1.5em; margin-bottom:10px;
-  text-shadow:0 1px 3px rgba(0,0,0,0.3);
-  border-bottom:1px solid rgba(255,255,255,0.3); padding-bottom:5px;
-}
+.day-section{margin:20px auto; max-width:400px; border-radius:15px; padding:10px; background:rgba(255,255,255,0.1);}
+.day-title{color:white; font-weight:bold; font-size:1.5em; margin-bottom:10px; text-shadow:0 1px 3px rgba(0,0,0,0.3); border-bottom:1px solid rgba(255,255,255,0.3); padding-bottom:5px;}
 ul{list-style:none; padding:0;}
-li{
-  background:#ffffffaa; color:#4caf50; margin:6px 0; padding:12px 15px;
-  border-radius:12px; box-shadow:0 4px 8px rgba(0,0,0,0.15);
-  transition:0.3s;
-}
+li{background:#ffffffaa; color:#e91e63; margin:6px 0; padding:12px 15px; border-radius:12px; box-shadow:0 4px 8px rgba(0,0,0,0.15); transition:0.3s;}
 li:hover{transform:scale(1.05);}
 .particle{position:absolute; border-radius:50%; background:white; opacity:0.15; pointer-events:none;}
 </style>
@@ -58,49 +47,52 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const conteudo = document.getElementById('conteudo');
 
-// Função para converter "dd/mm/yyyy hh:mm:ss" para Date válida
-function parseDateBR(dataStr){
+const entradasPorDia = {};
+
+function parseDateBR(dataStr) {
+  if (!dataStr) return null;
   const [date, time] = dataStr.split(' ');
-  if(!date || !time) return null;
+  if (!date || !time) return null;
   const [dd, mm, yyyy] = date.split('/');
   const [hh, min, ss] = time.split(':');
+  if ([dd, mm, yyyy, hh, min, ss].some(x=>x===undefined || isNaN(Number(x)))) return null;
   return new Date(`${yyyy}-${mm}-${dd}T${hh}:${min}:${ss}`);
 }
 
-const entradasPorDia = {};
-
 db.ref("entradas").on("child_added", snapshot=>{
   const entry = snapshot.val();
-  const dateObj = parseDateBR(entry.data);
-  const day = dateObj ? dateObj.toLocaleDateString("pt-PT") : "Data Inválida";
+  console.log('Data raw:', entry.data);
 
-  if(!entradasPorDia[day]) entradasPorDia[day] = [];
+  let dateObj = parseDateBR(entry.data);
+  if(!dateObj || isNaN(dateObj.getTime())) dateObj = new Date(entry.data);
+
+  const day = dateObj && !isNaN(dateObj.getTime()) ? dateObj.toLocaleDateString("pt-PT") : "Data Inválida";
+
+  if(!entradasPorDia[day]) entradasPorDia[day]=[];
   entradasPorDia[day].push(entry);
-
   atualizarUI();
 });
 
 function atualizarUI(){
-  conteudo.innerHTML = "";
+  conteudo.innerHTML="";
   const dias = Object.keys(entradasPorDia).sort((a,b)=>{
     return new Date(b.split('/').reverse().join('-')) - new Date(a.split('/').reverse().join('-'));
   });
 
   dias.forEach(day=>{
     const section = document.createElement('div');
-    section.className = "day-section";
+    section.className="day-section";
 
     const titulo = document.createElement('div');
-    titulo.className = "day-title";
+    titulo.className="day-title";
     titulo.textContent = day;
     section.appendChild(titulo);
 
-    const ul = document.createElement('ul');
+    const ul=document.createElement('ul');
     entradasPorDia[day].forEach(entry=>{
-      // Mostra nome e só a hora (hh:mm:ss)
-      const hora = entry.data.split(' ')[1] || '';
+      const hora = entry.data ? entry.data.split(' ')[1] || '' : '';
       const li = document.createElement('li');
-      li.textContent = `${entry.nome} — ${hora}`;
+      li.textContent=`${entry.nome} — ${hora}`;
       ul.appendChild(li);
     });
 
@@ -109,7 +101,7 @@ function atualizarUI(){
   });
 }
 
-// Partículas animadas
+// partículas animadas
 const particles=[];
 for(let i=0;i<20;i++){
   const p=document.createElement('div');

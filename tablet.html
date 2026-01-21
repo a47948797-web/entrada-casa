@@ -1,38 +1,47 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-<meta charset="UTF-8">
-<title>Tablet - Entradas</title>
+<meta charset="UTF-8" />
+<title>Tablet - Registar Entrada</title>
 <style>
-body {
-  margin:0; padding:0; font-family:'Helvetica',sans-serif;
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  height:100vh; overflow:hidden;
-  background: linear-gradient(270deg,#4caf50,#81c784,#a5d6a7);
+body{
+  margin:0; padding:20px; font-family:'Helvetica',sans-serif;
+  background: linear-gradient(270deg,#4caf50,#81c784,#2196f3);
   background-size:600% 600%;
   animation: gradientBG 15s ease infinite;
+  overflow-x:hidden;
 }
 @keyframes gradientBG{
   0%{background-position:0% 50%;}
   50%{background-position:100% 50%;}
   100%{background-position:0% 50%;}
 }
-h1 { font-size:2.5em; color:white; text-shadow:0 2px 6px rgba(0,0,0,0.3); margin-bottom:20px; }
-input, button{
-  font-size:1.5em; padding:15px; margin:10px;
-  border-radius:20px; border:none; outline:none; box-shadow:0 6px 12px rgba(0,0,0,0.15);
+h1{text-align:center;color:white;font-size:2em;margin-bottom:30px;text-shadow:0 2px 6px rgba(0,0,0,0.3);}
+form{max-width:400px;margin:0 auto; display:flex; flex-direction:column; gap:15px;}
+input[type=text]{padding:12px 15px;border-radius:10px;border:none;font-size:1em;}
+button{padding:12px; border:none; border-radius:12px; background:white; color:#4caf50; font-weight:bold; font-size:1em; cursor:pointer; transition:0.3s;}
+button:hover{transform:scale(1.05);}
+#msg{
+  text-align:center;
+  font-weight:bold;
+  margin-top:10px;
+  padding:10px;
+  border-radius:12px;
+  display:none;
 }
-input{ width:80%; max-width:400px; }
-button{ background:#ffffffaa; color:#4caf50; cursor:pointer; transition:0.3s; }
-button:hover{ background:#fff; transform:scale(1.05); }
-.particle{ position:absolute; border-radius:50%; background:white; opacity:0.2; pointer-events:none; }
+#msg.success{background:#ffffffaa;color:#4caf50;}
+#msg.error{background:#ffcccc;color:#e91e63;}
+.particle{position:absolute;border-radius:50%;background:white;opacity:0.15;pointer-events:none;}
 </style>
 </head>
 <body>
 
-<h1>Quem entrou?</h1>
-<input id="nome" placeholder="Escreve o nome" autocomplete="off">
-<button onclick="registar()">Entrar</button>
+<h1>Registrar Entrada</h1>
+<form id="form">
+  <input type="text" id="nome" placeholder="Nome da pessoa" required/>
+  <button type="submit">Registar</button>
+</form>
+<div id="msg"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -50,15 +59,37 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-function registar(){
-  const nome = document.getElementById('nome').value.trim();
-  if(!nome){ alert("Escreve um nome"); return; }
-  const data = new Date().toLocaleString("pt-PT");
-  db.ref("entradas").push({nome,data});
-  document.getElementById('nome').value='';
-}
+const form = document.getElementById('form');
+const nomeInput = document.getElementById('nome');
+const msgDiv = document.getElementById('msg');
 
-// partículas animadas
+form.addEventListener('submit', e=>{
+  e.preventDefault();
+  const nome = nomeInput.value.trim(); // remove espaços
+  if(!nome){
+    msgDiv.textContent = "O nome não pode estar vazio!";
+    msgDiv.className = "error";
+    msgDiv.style.display = "block";
+    return;
+  }
+
+  const now = new Date();
+  const data = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+
+  db.ref('entradas').push({nome, data});
+  
+  // mostrar aviso de sucesso
+  msgDiv.textContent = "Usuário guardado!";
+  msgDiv.className = "success";
+  msgDiv.style.display = "block";
+
+  nomeInput.value='';
+
+  // desaparece após 2 segundos
+  setTimeout(()=>{ msgDiv.style.display='none'; }, 2000);
+});
+
+// partículas
 const particles=[];
 for(let i=0;i<20;i++){
   const p=document.createElement('div');
@@ -82,5 +113,6 @@ window.addEventListener('touchmove', e=>{
   moveParticles(t.clientX,t.clientY);
 },{passive:true});
 </script>
+
 </body>
 </html>
