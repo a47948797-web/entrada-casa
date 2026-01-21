@@ -1,26 +1,35 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-<meta charset="UTF-8">
-<title>Mãe - Entradas</title>
+<meta charset="UTF-8" />
+<title>Mãe - Entradas por Dia</title>
 <style>
 body{
   margin:0; padding:20px; font-family:'Helvetica',sans-serif;
   background: linear-gradient(270deg,#81c784,#4caf50,#66bb6a);
   background-size:600% 600%;
   animation: gradientBG 15s ease infinite;
-  overflow:hidden;
+  overflow-x:hidden;
 }
 @keyframes gradientBG{
   0%{background-position:0% 50%;}
   50%{background-position:100% 50%;}
   100%{background-position:0% 50%;}
 }
-h1{text-align:center;color:white;font-size:2.2em;text-shadow:0 2px 6px rgba(0,0,0,0.3);}
-ul{list-style:none;padding:0; max-width:400px; margin:20px auto;}
+h1{text-align:center;color:white;font-size:2.2em;text-shadow:0 2px 6px rgba(0,0,0,0.3); margin-bottom:30px;}
+.day-section{
+  margin:20px auto; max-width:400px; border-radius:15px; padding:10px;
+  background:rgba(255,255,255,0.1);
+}
+.day-title{
+  color:white; font-weight:bold; font-size:1.5em; margin-bottom:10px;
+  text-shadow:0 1px 3px rgba(0,0,0,0.3);
+  border-bottom:1px solid rgba(255,255,255,0.3); padding-bottom:5px;
+}
+ul{list-style:none; padding:0;}
 li{
-  background:#ffffffaa; color:#4caf50; margin:8px 0; padding:15px;
-  border-radius:15px; box-shadow:0 6px 12px rgba(0,0,0,0.15);
+  background:#ffffffaa; color:#4caf50; margin:6px 0; padding:12px 15px;
+  border-radius:12px; box-shadow:0 4px 8px rgba(0,0,0,0.15);
   transition:0.3s;
 }
 li:hover{transform:scale(1.05);}
@@ -30,7 +39,7 @@ li:hover{transform:scale(1.05);}
 <body>
 
 <h1>Quem entrou</h1>
-<ul id="lista"></ul>
+<div id="conteudo"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -47,16 +56,60 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const lista=document.getElementById('lista');
+const conteudo = document.getElementById('conteudo');
+
+// Função para converter "dd/mm/yyyy hh:mm:ss" para Date válida
+function parseDateBR(dataStr){
+  const [date, time] = dataStr.split(' ');
+  if(!date || !time) return null;
+  const [dd, mm, yyyy] = date.split('/');
+  const [hh, min, ss] = time.split(':');
+  return new Date(`${yyyy}-${mm}-${dd}T${hh}:${min}:${ss}`);
+}
+
+const entradasPorDia = {};
 
 db.ref("entradas").on("child_added", snapshot=>{
-  const entry=snapshot.val();
-  const li=document.createElement('li');
-  li.textContent=`${entry.nome} — ${entry.data}`;
-  lista.prepend(li);
+  const entry = snapshot.val();
+  const dateObj = parseDateBR(entry.data);
+  const day = dateObj ? dateObj.toLocaleDateString("pt-PT") : "Data Inválida";
+
+  if(!entradasPorDia[day]) entradasPorDia[day] = [];
+  entradasPorDia[day].push(entry);
+
+  atualizarUI();
 });
 
-// partículas animadas
+function atualizarUI(){
+  conteudo.innerHTML = "";
+  const dias = Object.keys(entradasPorDia).sort((a,b)=>{
+    return new Date(b.split('/').reverse().join('-')) - new Date(a.split('/').reverse().join('-'));
+  });
+
+  dias.forEach(day=>{
+    const section = document.createElement('div');
+    section.className = "day-section";
+
+    const titulo = document.createElement('div');
+    titulo.className = "day-title";
+    titulo.textContent = day;
+    section.appendChild(titulo);
+
+    const ul = document.createElement('ul');
+    entradasPorDia[day].forEach(entry=>{
+      // Mostra nome e só a hora (hh:mm:ss)
+      const hora = entry.data.split(' ')[1] || '';
+      const li = document.createElement('li');
+      li.textContent = `${entry.nome} — ${hora}`;
+      ul.appendChild(li);
+    });
+
+    section.appendChild(ul);
+    conteudo.appendChild(section);
+  });
+}
+
+// Partículas animadas
 const particles=[];
 for(let i=0;i<20;i++){
   const p=document.createElement('div');
@@ -80,5 +133,6 @@ window.addEventListener('touchmove', e=>{
   moveParticles(t.clientX,t.clientY);
 },{passive:true});
 </script>
+
 </body>
 </html>
